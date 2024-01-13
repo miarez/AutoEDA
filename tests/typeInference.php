@@ -6,11 +6,22 @@
 require_once "../utils.php";
 require_once "../src/TypeInference.php";
 
+global $types, $scalar;
+
+$types = [];
+foreach (get_declared_classes() as $className) {
+    if (in_array('IType', class_implements($className))) {
+        if($className === "Unknown") continue;
+        $types[] = $className;
+    }
+}
+
+
 $tests = [
     // Scalar Types
     ['name' => 'NA Test', 'value' => 'NA', 'expected_output' => 'NA'],
     ['name' => 'Null Test', 'value' => null, 'expected_output' => 'Null'],
-    ['name' => 'NaN Test', 'value' => NAN, 'expected_output' => 'NaN'],
+    ['name' => 'NaN Test', 'value' => NAN, 'expected_output' => 'Nan'],
     ['name' => 'Boolean True Test', 'value' => true, 'expected_output' => 'Boolean'],
     ['name' => 'Boolean False Test', 'value' => false, 'expected_output' => 'Boolean'],
     ['name' => 'Byte Test', 'value' => '0x5A', 'expected_output' => 'Byte'],
@@ -24,7 +35,7 @@ $tests = [
 
     // List Types
     ['name' => 'Array Test', 'value' => [1, "apple", true], 'expected_output' => 'Array'],
-    ['name' => 'Vector Test', 'value' => ['hello', 'world', 'meow', 'meow'], 'expected_output' => 'Vector'],
+    ['name' => 'Vector Test', 'value' => ['hello', 'world', 'meow', 'meow'], 'expected_output' => 'StringVector'],
     ['name' => 'NumericVector Test', 'value' => [1.1, 2.2, 3.3, 1.4, 1.4], 'expected_output' => 'NumericVector'],
     ['name' => 'ByteVector Test', 'value' => ['0x5A', '0x2D', '0x6F', '0x6F'], 'expected_output' => 'ByteVector'],
     ['name' => 'DateVector Test', 'value' => ['2023-01-03T00:00:00', '2023-01-02T00:00:00', '2023-01-03T00:00:01', '2023-01-03T00:00:01'], 'expected_output' => 'DateVector'],
@@ -40,26 +51,23 @@ $tests = [
 
     // Table Types
     ['name' => 'Frame Test', 'value' => [["Name", "Age"], ["Alice", 30], ["Bob", 25]], 'expected_output' => 'Frame'],
-    ['name' => 'Dictionary Test', 'value' => [['Alice', 'Bob'], [30, 25]], 'expected_output' => 'Dictionary'],
+    ['name' => 'Dictionary Test', 'value' => [['Alice', 'Bob'], [30, 25]], 'expected_output' => ['Dictionary', 'CategorySetNumericVectorFrame']],
     ['name' => 'DataFrame Test', 'value' => [['Alice', 'Bob'], [30, 25], [true, false]], 'expected_output' => 'DataFrame'],
-    ['name' => 'CategoryNumericFrame Test', 'value' => [['Alice', 'Bob'], [30, 25], [100, 109]], 'expected_output' => 'CategoryNumericFrame'],
-    ['name' => 'DateNumericFrame Test', 'value' => [['2024-01-12', '2024-01-13'], [30, 25], [100, 109]], 'expected_output' => 'DateNumericFrame'],
+    ['name' => 'CategoryNumericFrame Test', 'value' => [['Alice', 'Bob'], [30, 25], [100, 109]], 'expected_output' => 'CategorySetNumericVectorFrame'],
+    ['name' => 'DateNumericFrame Test', 'value' => [['2024-01-12', '2024-01-13'], [30, 25], [100, 109]], 'expected_output' => 'DateSeriesSetNumericVectorFrame'],
     ['name' => 'Matrix Test', 'value' => [[1, 2, 3], [4, 5, 6], [7, 8, 9]], 'expected_output' => 'Matrix'],
 ];
 
-
-$out = $detailed_out = [];
-foreach ($tests as $index=>$test) {
-    $result = inferDataType($test['value']);
-    $success = $result === $test['expected_output'] ? 1 : 0;
-    $out[$test['name']] = $success ?: $result;
-    $detailed_out[$test['name']] =
-        [
-            "expected_output" => $test['expected_output'],
-            "output" => $result,
-            "success" => $success,
-        ];
+$out = [];
+foreach($tests as $test)
+{
+    $output = get_class(Utils::get_best_match($test['value']));
+    if(is_array($test['expected_output'])){
+        $success = in_array(trim($output, "_"), $test['expected_output']);
+    } else {
+        $success = $output === "_".$test['expected_output'];
+    }
+    $out[$test['name']] = $success ?: $output;
 }
 
 pp($out, 1);
-pp($detailed_out, 1);
