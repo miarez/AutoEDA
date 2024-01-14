@@ -285,7 +285,7 @@ Note the `Warning` That a transformation was applied!
 ## APPLIED TRANSFORMATION (_2xN_NumericMatrix)->[transpose]->(_Nx2_NumericMatrix)
 ```
 
-If you haven't read the NEXT STEPS Section, feel free to reference it at the top. 
+If you haven't read the [NEXT STEPS Section](https://github.com/miarez/AutoEDA?tab=readme-ov-file#next-steps), feel free to reference it at the top. 
 
 Ok for some actual documentation now, here is the type system so far:
 
