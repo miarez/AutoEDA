@@ -1,5 +1,7 @@
 # Auto EDA
 
+Auto Exploratory Analysis
+
 Pass in some data, magically get details about the data as well as suggestions for how to transform it & plot it.
 
 **Goal:**
@@ -11,10 +13,10 @@ Pass in some data, magically get details about the data as well as suggestions f
 ## Important Note:
 - This code is WIP, it is actively being worked on, has a lot of issues, and should not be forked / used
 - I am keeping things hacky & dirty. I am aware of the inefficiencies / dumb shit, I am ignoring them for now 
-- **I am not taking suggestions** / ideas. I've had this in mind for years, and im 99.999% confidence I'll pull this off.
+- **I am not taking suggestions** / ideas. I've had this in mind for years, and im 99.999% confident I'll pull this off.
   - I don't want ideas because I don't want to have to give credit 
   - Once I finish everything I want to do and get stuck somewhere, I'll be open for ideas which I will happily credit people with :)
-- I will be adding features to this slowly and methodically. It will be a long process but I want to understand every single line.
+- I will be adding features to this slowly and methodically. It will be a long process, but I want to understand every single line.
 
 ---
 
@@ -24,11 +26,11 @@ Pass in some data, magically get details about the data as well as suggestions f
 
 A shit ton, but I'm excited.
 
-For one, I will be making the code more efficient/clever as currently is just brute forcing the type inference. Also adding more types, removing types, etc.
+For one, I will be making the code more efficient/clever as currently its just brute forcing the type inference. Also adding more types, removing types, etc.
 
 Next, I want to add `stats` (texture) to all the types, to know their `min`, `max`,`skew`,`cardinality`, etc.
 
-Using that I will create around which plots are best to visualize what kind of data using principles from the concept of `grammar of graphics`
+Using that I will create logic around which plots are best to visualize what kind of data using principles from the concept of `grammar of graphics`
 
 Next, I will create smarter `cycle detection` logic for the transformations, to be able to know beyond just 1-step transformations.
 
@@ -40,6 +42,7 @@ Next, I will use the `kaggle notebooks API` to detect transformation patterns ma
 
 `Cloud Service Providers` get the benefit of doing query optimization by applying patterns used by their clients, I will emulate the same functionality by using opensource code to find patterns and help analysts understand their data.
 
+I am writing my own language, so soon enough this will get absorbed into my language. Meaning a C++ rewrite is inevitable down the line.
 
 ## Why am I building this?
 
@@ -101,15 +104,7 @@ $data = "2023-01-01";
 $out = (new Inference)->get_best_match($data);
 Output:
 MATCHES TYPE _String
-_String Object
-(
-    [value] => 2023-01-01
-)
 MATCHES TYPE _Date
-_Date Object
-(
-    [value] => 2023-01-01
-)
 Final: _Date
 ```
 
@@ -173,7 +168,6 @@ $out = (new Inference)->get_best_match($data);
 Output:
 MATCHES TYPE _Array
 MATCHES TYPE _Vector
-MATCHES TYPE _NumericVector
 MATCHES TYPE _Frame
 MATCHES TYPE _DataFrame
 MATCHES TYPE _2xN_NumericMatrix
@@ -278,6 +272,8 @@ $data = [[1, 2, 3, 10, 3], [7, 8, 9, 13, 5]];
 $type = (new Inference())->get_best_match($data);
 $json = ($autoPlot)->try_plot($type);
 ```
+... gets plotted!
+
 ![img_5.png](assets/img_5.png)
 
 Note the `Warning` That a transformation was applied!
