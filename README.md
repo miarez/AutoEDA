@@ -2,6 +2,9 @@
 
 Pass in some data, magically get details about the data as well as suggestions for how to transform it & plot it.
 
+**Goal:**
+- Make a tool to help non-professional data analysts understand their data by suggesting patterns used by professional analysis. 
+
 ---
 
 
