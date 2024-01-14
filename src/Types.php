@@ -14,6 +14,8 @@ interface IExtensionType {}
 interface IList {}
 # Table Types (2-dim)
 interface ITable {}
+interface IDataFrame {}
+interface IMatrix {}
 
 
 class Unknown implements IType {
@@ -256,7 +258,7 @@ class _NA implements IType, IScalar, INullish {
 }
 
 
-class _Date implements IType, IScalar, IDate {
+class _Date implements IType, IScalar, IString, IDate {
 
     public string|int $value;
 
@@ -304,7 +306,7 @@ class _Date implements IType, IScalar, IDate {
     }
 }
 
-class _Location implements IType, IScalar, IExtensionType {
+class _Location implements IType, IScalar, IString, IExtensionType {
 
     public string $value;
 
@@ -326,9 +328,11 @@ class _Location implements IType, IScalar, IExtensionType {
         $knownLocations = ['United States of America', 'USA', 'us', 'USA', 'FR', 'CA', 'US', 'CA', 'FR', 'FR','USA', 'FR', 'CA'];
         return in_array($value, $knownLocations, true);
     }
+
+
     public static function try_set(
         $value
-    ) : _Location | Unknown
+    ) : self | Unknown
     {
         if(self::matches_type($value))
         {
@@ -716,6 +720,7 @@ class _SeriesSet implements IType, IList {
 }
 
 
+# Technically StringSet
 class _CategorySet implements IType, IList {
 
     public array $value;
@@ -867,7 +872,7 @@ class _Frame implements IType, ITable {
 }
 
 
-class _DataFrame implements IType, ITable {
+class _DataFrame implements IType, ITable, IDataFrame {
 
     public array $value;
 
@@ -903,7 +908,7 @@ class _DataFrame implements IType, ITable {
     }
 }
 
-class _Matrix implements IType, ITable {
+class _Matrix implements IType, ITable, IMatrix {
 
     public array $value;
 
@@ -941,10 +946,8 @@ class _Matrix implements IType, ITable {
     }
 }
 
-/**
- *Note: Should only be switched to this type
- */
-class _BiVariateNumericMatrix implements IType, ITable {
+
+class _2xN_NumericMatrix implements IType, ITable, IMatrix {
 
     public array $value;
 
@@ -972,11 +975,49 @@ class _BiVariateNumericMatrix implements IType, ITable {
 
     public static function try_set(
         $value
-    ) : _BiVariateNumericMatrix | Unknown
+    ) : _2xN_NumericMatrix | Unknown
     {
         if(self::matches_type($value))
         {
-            return new _BiVariateNumericMatrix($value);
+            return new _2xN_NumericMatrix($value);
+        }
+        return new Unknown($value);
+    }
+}
+
+class _Nx2_NumericMatrix implements IType, ITable, IMatrix {
+
+    public array $value;
+
+    private function __construct(
+        array $value
+    )
+    {
+        $this->value = $value;
+    }
+    public static function matches_type(
+        $value
+    ) : bool
+    {
+        if(!_DataFrame::matches_type($value)) return false;
+        foreach($value as $columns)
+        {
+            if(sizeof($columns) !== 2) return false;
+            if(!_NumericVector::matches_type($columns)){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static function try_set(
+        $value
+    ) : _Nx2_NumericMatrix | Unknown
+    {
+        if(self::matches_type($value))
+        {
+            return new _Nx2_NumericMatrix($value);
         }
         return new Unknown($value);
     }

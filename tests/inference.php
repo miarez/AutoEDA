@@ -2,6 +2,7 @@
 require_once "../utils.php";
 require_once "../src/Inference.php";
 
+
 $tests = [
     // Scalar Types
     ['name' => 'NA Test', 'value' => 'NA', 'expected_output' => 'NA'],
@@ -41,7 +42,7 @@ $tests = [
     ['name' => 'CategoryNumericFrame Test', 'value' => [['Alice', 'Bob'], [30, 25], [100, 109]], 'expected_output' => 'CategorySetNumericVectorFrame'],
     ['name' => 'DateNumericFrame Test', 'value' => [['2024-01-12', '2024-01-13'], [30, 25], [100, 109]], 'expected_output' => 'DateSeriesSetNumericVectorFrame'],
     ['name' => 'Matrix Test', 'value' => [[1, 2, 3], [4, 5, 6], [7, 8, 9]], 'expected_output' => 'Matrix'],
-    ['name' => '_BIVariateNumericMatrix Test', 'value' => [[1, 2, 3], [7, 8, 9]], 'expected_output' => 'BIVariateNumericMatrix'],
+    ['name' => '_2xN_NumericMatrix Test', 'value' => [[1, 2, 3], [7, 8, 9]], 'expected_output' => '2xN_NumericMatrix'],
 ];
 
 $inference = new Inference();

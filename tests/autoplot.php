@@ -1,21 +1,24 @@
 <?php
 
 require_once "../utils.php";
-require_once "../src/MatrixTranspose.php";
+require_once "../src/Transformations.php";
 require_once "../src/Inference.php";
-require_once "../src/Plot.php";
+require_once "../src/Plots.php";
+require_once "../src/AutoPlot.php";
 
-pp(getPlotConstructorDataTypes());
+$autoPlot = new AutoPlot();
+
+
+$data = [[1,7],[2,8],[3,9],[10,13],[15,2],[2,18],[9,8],[7,2],[3,5],[5,9],[8,2],[4,5],[7,5],[3,3]];
 
 $data = [[1, 2, 3, 10, 3], [7, 8, 9, 13, 5]];
-
-$type = (new Inference)->get_best_match($data);
-$json = (new Scatter($type))->for_google_charts();
-
+$type = (new Inference())->get_best_match($data);
+$json = ($autoPlot)->try_plot($type);
 
 ?>
 
-<html lang="">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>AutoPlot</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
