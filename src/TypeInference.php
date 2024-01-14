@@ -2,8 +2,6 @@
 
 class Utils {
 
-
-
     public static function is_all($list, $of_type) : bool
     {
         foreach ($list as $item){
@@ -1044,6 +1042,87 @@ class _Matrix implements IType, ITable {
     }
 }
 
+/**
+ *Note: Should only be switched to this type
+ */
+class _BiVariateNumericMatrix implements IType, ITable {
+
+    public array $value;
+
+    private function __construct(
+        array $value
+    )
+    {
+        $this->value = $value;
+    }
+    public static function matches_type(
+        $value
+    ) : bool
+    {
+        if(!_DataFrame::matches_type($value)) return false;
+
+        if(sizeof($value) !== 2) return false;
+
+        foreach($value as $columns)
+        {
+            if(!_NumericVector::matches_type($columns)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static function try_set(
+        $value
+    ) : _BiVariateNumericMatrix | Unknown
+    {
+        if(self::matches_type($value))
+        {
+            return new _BiVariateNumericMatrix($value);
+        }
+        return new Unknown($value);
+    }
+}
+
+class _TriVariateNumericMatrix implements IType, ITable {
+
+    public array $value;
+
+    private function __construct(
+        array $value
+    )
+    {
+        $this->value = $value;
+    }
+    public static function matches_type(
+        $value
+    ) : bool
+    {
+        if(!_DataFrame::matches_type($value)) return false;
+
+        if(sizeof($value) !== 3) return false;
+
+        foreach($value as $columns)
+        {
+            if(!_NumericVector::matches_type($columns)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static function try_set(
+        $value
+    ) : _TriVariateNumericMatrix | Unknown
+    {
+        if(self::matches_type($value))
+        {
+            return new _TriVariateNumericMatrix($value);
+        }
+        return new Unknown($value);
+    }
+}
+
 
 
 class _DictionaryFrame implements IType, ITable {
@@ -1347,8 +1426,11 @@ class _DateSeriesSetNumericVectorFrame implements IType, ITable {
     }
 }
 
-
-
-
-
-
+global $types, $scalar;
+$types = [];
+foreach (get_declared_classes() as $className) {
+    if (in_array('IType', class_implements($className))) {
+        if($className === "Unknown") continue;
+        $types[] = $className;
+    }
+}
