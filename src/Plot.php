@@ -5,7 +5,7 @@ interface Plot {}
 class Scatter implements Plot {
     private array $data;
     public function __construct(
-        _BiVariateNumericMatrix|_TriVariateNumericMatrix $data
+        _BiVariateNumericMatrix $data
     ){
         $this->data    = $data->value;
     }
@@ -14,6 +14,8 @@ class Scatter implements Plot {
         return json_encode(MatrixTranspose::transpose($this->data));
     }
 }
+
+
 
 
 

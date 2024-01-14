@@ -1,106 +1,5 @@
 <?php
 
-class Utils {
-
-    public static function is_all($list, $of_type) : bool
-    {
-        foreach ($list as $item){
-            if(!$of_type::matches_type($item))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    # this will probably die?
-    public static function all(array $list) : bool|String
-    {
-        $match = self::get_best_match($list[0]);
-        foreach ($list as $item){
-            if(!$match::matches_type($item))
-            {
-                return false;
-            }
-        }
-        return get_class($match);
-    }
-
-    public static function get_best_match(
-        $value,
-        $debug = false
-    ) : IType
-    {
-        global $types;
-        $match = Unknown::set($value);
-        foreach($types as $type)
-        {
-            $result_type = $type::try_set($value);
-            if(get_class($result_type) !== "Unknown")
-            {
-                if($debug) pp($result_type, 0, "MATCHES TYPE $type");
-                $match = $result_type;
-            }
-        }
-        return $match;
-    }
-
-    public static function is_ordered(
-        array $input
-    ) : bool
-    {
-        $ascendingOrder = true;
-        $descendingOrder = true;
-        $previousValue = $input[0];
-        for ($i = 1; $i < sizeof($input); $i++) {
-            if ($input[$i] < $previousValue) {
-                $ascendingOrder = false;
-            }
-            if ($input[$i] > $previousValue) {
-                $descendingOrder = false;
-            }
-            $previousValue = $input[$i];
-
-            // If neither ascending nor descending order is maintained, break early
-            if (!$ascendingOrder && !$descendingOrder) {
-                return false;
-            }
-        }
-
-        return true;
-
-    }
-
-    # todo replace with get dimension
-    public static function is_1D(
-        $array
-    ) : bool
-    {
-        return count($array) == count($array, COUNT_RECURSIVE);
-    }
-
-    public static function all_same_length(
-        array $array
-    ) : bool
-    {
-        $length = sizeof($array[0]);
-        foreach($array as $v){
-            if(sizeof($v) !== $length){
-                return false;
-            }
-        }
-        return true;
-    }
-
-}
-
-
-
-
-class TypeInference {
-
-}
-
 interface IType {};
 
 # Scalar Types (0-dim)
@@ -141,7 +40,7 @@ class _Null implements IType, IScalar, INullish {
     public $value;
 
     public function __construct(
-         $value = NULL
+        $value = NULL
     )
     {
         $this->value = $value;
@@ -171,7 +70,7 @@ class _Boolean implements IType, IScalar {
     public bool $value;
 
     public function __construct(
-         bool $value
+        bool $value
     )
     {
         $this->value = $value;
@@ -195,11 +94,11 @@ class _Boolean implements IType, IScalar {
 }
 
 class _Byte implements IType, IScalar {
-    
+
     public string $value;
 
     public function __construct(
-         string $value
+        string $value
     )
     {
         $this->value = $value;
@@ -238,7 +137,7 @@ class _Numeric implements IType, IScalar, INumeric {
     public int|float $value;
 
     public function __construct(
-         int|float $value
+        int|float $value
     )
     {
         $this->value = $value;
@@ -300,7 +199,7 @@ class _String implements IType, IScalar, IString {
     public string $value;
 
     public function __construct(
-         string $value
+        string $value
     )
     {
         $this->value = $value;
@@ -362,7 +261,7 @@ class _Date implements IType, IScalar, IDate {
     public string|int $value;
 
     public function __construct(
-         string|int $value
+        string|int $value
     )
     {
         $this->value = $value;
@@ -410,7 +309,7 @@ class _Location implements IType, IScalar, IExtensionType {
     public string $value;
 
     public function __construct(
-         string $value
+        string $value
     )
     {
         $this->value = $value;
@@ -483,7 +382,7 @@ class _Vector implements IType, IList {
     {
         if (!_Array::matches_type($value)) return false;
 
-        $element_type = get_class(Utils::get_best_match($value[0]));
+        $element_type = get_class((new Inference)->get_best_match($value[0]));
         foreach ($value as $item){
             if(!$element_type::matches_type($item))
             {
@@ -518,7 +417,7 @@ class _NumericVector implements IType, IList {
         $value
     ) : bool
     {
-        return _Vector::matches_type($value) && Utils::is_all($value, "_Numeric");
+        return _Vector::matches_type($value) && Inference::is_all($value, "_Numeric");
     }
 
     public static function try_set(
@@ -547,7 +446,7 @@ class _BooleanVector implements IType, IList {
         $value
     ) : bool
     {
-        return _Vector::matches_type($value) && Utils::is_all($value, "_Boolean");
+        return _Vector::matches_type($value) && Inference::is_all($value, "_Boolean");
     }
 
     public static function try_set(
@@ -578,7 +477,7 @@ class _StringVector implements IType, IList {
         $value
     ) : bool
     {
-        return _Vector::matches_type($value) && Utils::is_all($value, "_String");
+        return _Vector::matches_type($value) && Inference::is_all($value, "_String");
     }
 
     public static function try_set(
@@ -608,7 +507,7 @@ class _ByteVector implements IType, IList {
         $value
     ) : bool
     {
-        return _Vector::matches_type($value) && Utils::is_all($value, "_Byte");
+        return _Vector::matches_type($value) && Inference::is_all($value, "_Byte");
     }
 
     public static function try_set(
@@ -638,7 +537,7 @@ class _DateVector implements IType, IList {
         $value
     ) : bool
     {
-        return _Vector::matches_type($value) && Utils::is_all($value, "_Date");
+        return _Vector::matches_type($value) && Inference::is_all($value, "_Date");
     }
 
     public static function try_set(
@@ -668,7 +567,7 @@ class _LocationVector implements IType, IList {
         $value
     ) : bool
     {
-        return _Vector::matches_type($value) && Utils::is_all($value, "_Location");
+        return _Vector::matches_type($value) && Inference::is_all($value, "_Location");
     }
 
     public static function try_set(
@@ -709,7 +608,7 @@ class _Series implements IType, IList {
         # A little ugly
         if(_StringVector::matches_type($value) && !_DateVector::matches_type($value)) return false;
 
-        return Utils::is_ordered($value);
+        return Inference::is_ordered($value);
     }
 
     public static function try_set(
@@ -738,7 +637,7 @@ class _DateSeries implements IType, IList {
         $value
     ) : bool
     {
-        return _Series::matches_type($value) && Utils::is_all($value, "_Date");
+        return _Series::matches_type($value) && Inference::is_all($value, "_Date");
     }
 
     public static function try_set(
@@ -831,7 +730,7 @@ class _CategorySet implements IType, IList {
         $value
     ) : bool
     {
-        return _Set::matches_type($value) && (Utils::is_all($value, '_String') || Utils::is_all($value, "_Date"));
+        return _Set::matches_type($value) && (Inference::is_all($value, '_String') || Inference::is_all($value, "_Date"));
     }
 
     public static function try_set(
@@ -861,7 +760,7 @@ class _LocationSet implements IType, IList {
         $value
     ) : bool
     {
-        return _Set::matches_type($value) && Utils::is_all($value, "_Location");
+        return _Set::matches_type($value) && Inference::is_all($value, "_Location");
     }
 
     public static function try_set(
@@ -890,7 +789,7 @@ class _DateSet implements IType, IList {
         $value
     ) : bool
     {
-        return _Set::matches_type($value) && Utils::is_all($value, "_Date");
+        return _Set::matches_type($value) && Inference::is_all($value, "_Date");
     }
 
     public static function try_set(
@@ -950,8 +849,8 @@ class _Frame implements IType, ITable {
     ) : bool
     {
         if(!_Array::matches_type($value)) return false;
-        if(Utils::is_1D($value)) return false;
-        if(!Utils::all_same_length($value)) return false;
+        if(Inference::is_1D($value)) return false;
+        if(!Inference::all_same_length($value)) return false;
         return true;
     }
 
@@ -986,7 +885,7 @@ class _DataFrame implements IType, ITable {
 
         foreach($value as $columns)
         {
-            $type = Utils::all($columns);
+            $type = Inference::all($columns);
             if(!$type) return false;
         }
         return true;
@@ -1008,7 +907,7 @@ class _Matrix implements IType, ITable {
 
     public array $value;
 
-    public function __construct(
+    private function __construct(
         array $value
     )
     {
@@ -1023,7 +922,7 @@ class _Matrix implements IType, ITable {
         $types = [];
         foreach($value as $columns)
         {
-            $type = Utils::all($columns);
+            $type = Inference::all($columns);
             $types[$type] = 1;;
         }
         if(sizeof($types) > 1) return false;
@@ -1062,7 +961,6 @@ class _BiVariateNumericMatrix implements IType, ITable {
         if(!_DataFrame::matches_type($value)) return false;
 
         if(sizeof($value) !== 2) return false;
-
         foreach($value as $columns)
         {
             if(!_NumericVector::matches_type($columns)){
@@ -1083,46 +981,6 @@ class _BiVariateNumericMatrix implements IType, ITable {
         return new Unknown($value);
     }
 }
-
-class _TriVariateNumericMatrix implements IType, ITable {
-
-    public array $value;
-
-    private function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
-    public static function matches_type(
-        $value
-    ) : bool
-    {
-        if(!_DataFrame::matches_type($value)) return false;
-
-        if(sizeof($value) !== 3) return false;
-
-        foreach($value as $columns)
-        {
-            if(!_NumericVector::matches_type($columns)){
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static function try_set(
-        $value
-    ) : _TriVariateNumericMatrix | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _TriVariateNumericMatrix($value);
-        }
-        return new Unknown($value);
-    }
-}
-
 
 
 class _DictionaryFrame implements IType, ITable {
@@ -1145,7 +1003,7 @@ class _DictionaryFrame implements IType, ITable {
         $sets = 0;
         foreach($value as $columns)
         {
-            $type = Utils::all($columns);
+            $type = Inference::all($columns);
             $sets += _Set::matches_type($columns);
             $hold[$type][] = 1;
         }
@@ -1423,14 +1281,5 @@ class _DateSeriesSetNumericVectorFrame implements IType, ITable {
             return new _DateSeriesSetNumericVectorFrame($value);
         }
         return new Unknown($value);
-    }
-}
-
-global $types, $scalar;
-$types = [];
-foreach (get_declared_classes() as $className) {
-    if (in_array('IType', class_implements($className))) {
-        if($className === "Unknown") continue;
-        $types[] = $className;
     }
 }

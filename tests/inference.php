@@ -1,20 +1,6 @@
 <?php
-/**
- * Code IS WIP. I'm tired, its 2:30am, shit is messy but fuck it it works (sorta)
- */
-
 require_once "../utils.php";
-require_once "../src/TypeInference.php";
-
-global $types, $scalar;
-$types = [];
-foreach (get_declared_classes() as $className) {
-    if (in_array('IType', class_implements($className))) {
-        if($className === "Unknown") continue;
-        $types[] = $className;
-    }
-}
-
+require_once "../src/Inference.php";
 
 $tests = [
     // Scalar Types
@@ -58,10 +44,12 @@ $tests = [
     ['name' => '_BIVariateNumericMatrix Test', 'value' => [[1, 2, 3], [7, 8, 9]], 'expected_output' => 'BIVariateNumericMatrix'],
 ];
 
+$inference = new Inference();
+
 $out = [];
 foreach($tests as $test)
 {
-    $output = get_class(Utils::get_best_match($test['value']));
+    $output = get_class($inference->get_best_match($test['value']));
     if(is_array($test['expected_output'])){
         $success = in_array(trim($output, "_"), $test['expected_output']);
     } else {

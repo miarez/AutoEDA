@@ -2,23 +2,22 @@
 
 require_once "../utils.php";
 require_once "../src/MatrixTranspose.php";
-require_once "../src/TypeInference.php";
+require_once "../src/Inference.php";
 require_once "../src/Plot.php";
 
 pp(getPlotConstructorDataTypes());
 
-$data = [[1, 2, 3, 10, 3], [7, 8, 9, 13, 5], [100, 200, 20, 32, 100]];
+$data = [[1, 2, 3, 10, 3], [7, 8, 9, 13, 5]];
 
-
-$type = Utils::get_best_match($data);
-
+$type = (new Inference)->get_best_match($data);
 $json = (new Scatter($type))->for_google_charts();
 
 
 ?>
 
-<html>
+<html lang="">
 <head>
+    <title>AutoPlot</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
         google.charts.load('current', {'packages':['scatter']});
@@ -49,6 +48,7 @@ $json = (new Scatter($type))->for_google_charts();
         }
 
     </script>
+
 </head>
 <body>
 <div id="chart_div" style="width: 900px; height: 500px;"></div>
