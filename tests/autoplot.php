@@ -11,9 +11,11 @@ $autoPlot = new AutoPlot();
 
 $data = [[1,7],[2,8],[3,9],[10,13],[15,2],[2,18],[9,8],[7,2],[3,5],[5,9],[8,2],[4,5],[7,5],[3,3]];
 $data = [[1, 2, 3, 10, 3], [7, 8, 9, 13, 5]];
-//$data = [["pizza", "hotdogs", "burgers", "ice cream", "chips"], [7, 8, 9, 13, 5]];
+$data = [["pizza", "hotdogs", "burgers", "ice cream", "chips"], [7, 8, 9, 13, 5]];
 $data = [["US", "CA", "FR", "GB", "IT"], [7, 8, 9, 13, 5]];
 
+
+$data = [["pizza", "hotdogs", "burgers", "ice cream", "chips"], [7, 8, 9, 13, 5], [100, 200, 300, 240, 150]];
 $type = (new Inference())->get_best_match($data);
 
 $json = ($autoPlot)->try_plot($type);
@@ -25,7 +27,7 @@ $json = ($autoPlot)->try_plot($type);
     <title>AutoPlot</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart', 'scatter', 'geochart']});
+        google.charts.load('current', {'packages':['corechart', 'scatter', 'geochart', 'bar']});
 
         const cs = console.log;
 
@@ -42,6 +44,9 @@ $json = ($autoPlot)->try_plot($type);
                     break;
                 case "Google_GeoPlot":
                     renderGeoPlot(JSON.parse(_data.data))
+                    break;
+                case "Google_BarChart":
+                    renderBar(JSON.parse(_data.data))
                     break;
                 default:
                     cs("No Known Plot Can Be Rendered")
@@ -105,6 +110,29 @@ $json = ($autoPlot)->try_plot($type);
             var chart = new google.visualization.GeoChart(document.getElementById('chart_div'));
 
             chart.draw(data, options);
+        }
+
+        function renderBar(
+            _data
+        ) {
+            let data = new google.visualization.DataTable()
+
+            data.addColumn('string', 'Category')
+            for(let i = 1; i < _data[0].length; i++)
+            {
+                data.addColumn('number', `series${i}`);
+            }
+            data.addRows(_data);
+
+            let options = {
+                title: 'Bar Chart',
+                width: 800,
+                height: 500,
+                bars: 'vertical' //horizontal
+            };
+
+            let chart = new google.charts.Bar(document.getElementById('chart_div'));
+            chart.draw(data, google.charts.Bar.convertOptions(options));
         }
 
     </script>
