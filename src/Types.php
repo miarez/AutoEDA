@@ -325,7 +325,7 @@ class _Location implements IType, IScalar, IString, IExtensionType {
             return false;
         }
         // TODO:
-        $knownLocations = ['United States of America', 'USA', 'us', 'USA', 'FR', 'CA', 'US', 'CA', 'FR', 'FR','USA', 'FR', 'CA'];
+        $knownLocations = ['United States of America', 'USA', 'us', 'USA', 'FR', 'CA', 'US', 'CA', 'FR', 'FR','USA', 'FR', 'CA', "US", "CA", "FR", "GB", "IT"];
         return in_array($value, $knownLocations, true);
     }
 
@@ -1057,6 +1057,40 @@ class _Nx2_CategoryNumericDictionaryFrame implements IType, ITable, IMatrix {
     }
 }
 
+class _Nx2_LocationCategoryNumericDictionaryFrame implements IType, ITable, IMatrix {
+
+    public array $value;
+
+    private function __construct(
+        array $value
+    )
+    {
+        $this->value = $value;
+    }
+    public static function matches_type(
+        $value
+    ) : bool
+    {
+        if(!_Frame::matches_type($value)) return false;
+        # potential infinite loop
+        if(_2xN_LocationCategoryNumericDictionaryFrame::matches_type(Transformations::transpose($value))){
+            return true;
+        }
+        return false;
+    }
+
+    public static function try_set(
+        $value
+    ) : _Nx2_LocationCategoryNumericDictionaryFrame | Unknown
+    {
+        if(self::matches_type($value))
+        {
+            return new _Nx2_LocationCategoryNumericDictionaryFrame($value);
+        }
+        return new Unknown($value);
+    }
+}
+
 
 class _DictionaryFrame implements IType, ITable {
 
@@ -1227,6 +1261,48 @@ class _2xN_CategoryNumericDictionaryFrame implements IType, ITable {
         if(self::matches_type($value))
         {
             return new _2xN_CategoryNumericDictionaryFrame($value);
+        }
+        return new Unknown($value);
+    }
+}
+
+
+class _2xN_LocationCategoryNumericDictionaryFrame implements IType, ITable {
+
+    public array $value;
+
+    public function __construct(
+        array $value
+    )
+    {
+        $this->value = $value;
+    }
+    public static function matches_type(
+        $value
+    ) : bool
+    {
+        if(!_DataFrame::matches_type($value)) return false;
+
+        $has_location_category = $has_numeric = 0;
+        foreach($value as $columns)
+        {
+            $has_location_category += _LocationVector::matches_type($columns);
+            $has_numeric += _NumericVector::matches_type($columns);
+        }
+
+        if($has_location_category !== 1) return false;
+        if($has_numeric !== 1) return false;
+
+        return true;
+    }
+
+    public static function try_set(
+        $value
+    ) : _2xN_LocationCategoryNumericDictionaryFrame | Unknown
+    {
+        if(self::matches_type($value))
+        {
+            return new _2xN_LocationCategoryNumericDictionaryFrame($value);
         }
         return new Unknown($value);
     }

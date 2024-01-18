@@ -10,6 +10,9 @@ class Transformations {
         "_2xN_CategoryNumericDictionaryFrame" => [
             "_Nx2_CategoryNumericDictionaryFrame" => "transpose",
         ],
+        "_2xN_LocationCategoryNumericDictionaryFrame" => [
+            "_Nx2_LocationCategoryNumericDictionaryFrame" => "transpose",
+        ],
     ];
 
     public static function pairwiseZip(array $array1, array $array2): array {

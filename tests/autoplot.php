@@ -11,11 +11,12 @@ $autoPlot = new AutoPlot();
 
 $data = [[1,7],[2,8],[3,9],[10,13],[15,2],[2,18],[9,8],[7,2],[3,5],[5,9],[8,2],[4,5],[7,5],[3,3]];
 $data = [[1, 2, 3, 10, 3], [7, 8, 9, 13, 5]];
-$data = [["pizza", "hotdogs", "burgers", "ice cream", "chips"], [7, 8, 9, 13, 5]];
+//$data = [["pizza", "hotdogs", "burgers", "ice cream", "chips"], [7, 8, 9, 13, 5]];
+$data = [["US", "CA", "FR", "GB", "IT"], [7, 8, 9, 13, 5]];
 
 $type = (new Inference())->get_best_match($data);
-$json = ($autoPlot)->try_plot($type);
 
+$json = ($autoPlot)->try_plot($type);
 ?>
 
 <!DOCTYPE html>
@@ -24,7 +25,7 @@ $json = ($autoPlot)->try_plot($type);
     <title>AutoPlot</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart', 'scatter']});
+        google.charts.load('current', {'packages':['corechart', 'scatter', 'geochart']});
 
         const cs = console.log;
 
@@ -38,6 +39,9 @@ $json = ($autoPlot)->try_plot($type);
                     break;
                 case "Google_Scatter":
                     renderScatter(JSON.parse(_data.data))
+                    break;
+                case "Google_GeoPlot":
+                    renderGeoPlot(JSON.parse(_data.data))
                     break;
                 default:
                     cs("No Known Plot Can Be Rendered")
@@ -71,9 +75,6 @@ $json = ($autoPlot)->try_plot($type);
 
             data.addColumn('string', `category`);
             data.addColumn('number', `series`);
-
-
-
             data.addRows(data_to_render);
 
             let options = {
@@ -83,6 +84,26 @@ $json = ($autoPlot)->try_plot($type);
             };
 
             let chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+        }
+
+        function renderGeoPlot() {
+
+            let data = new google.visualization.DataTable();
+            data.addColumn('string', `Country`);
+            data.addColumn('number', `series`);
+            data.addRows([
+                ['Germany', 200],
+                ['United States', 300],
+                ['Brazil', 400],
+                ['Canada', 500],
+                ['France', 600],
+                ['RU', 700]
+            ]);
+
+            var options = {};
+            var chart = new google.visualization.GeoChart(document.getElementById('chart_div'));
+
             chart.draw(data, options);
         }
 
