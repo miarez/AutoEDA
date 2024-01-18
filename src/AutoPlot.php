@@ -60,7 +60,10 @@ class AutoPlot {
             return $json;
         }
         $available_plot = $this->mapping[get_class($type)][0];
-        return (new $available_plot($type))->data;
+        return json_encode([
+            "type" => $available_plot,
+            "data" => (new $available_plot($type))->data
+        ]);
     }
 
 }

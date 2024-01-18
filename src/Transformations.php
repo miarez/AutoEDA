@@ -7,6 +7,9 @@ class Transformations {
             # to type               # via this method
             "_Nx2_NumericMatrix" => "transpose",
         ],
+        "_2xN_CategoryNumericDictionaryFrame" => [
+            "_Nx2_CategoryNumericDictionaryFrame" => "transpose",
+        ],
     ];
 
     public static function pairwiseZip(array $array1, array $array2): array {
