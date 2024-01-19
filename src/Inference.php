@@ -19,7 +19,7 @@ class Inference {
         $debug = false
     ) : IType
     {
-        $match = Unknown::set($value);
+        $match = Unknown::try_set($value);
         foreach($this->types as $type)
         {
             $result_type = $type::try_set($value);

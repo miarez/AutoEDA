@@ -18,7 +18,17 @@ interface IDataFrame {}
 interface IMatrix {}
 
 
-class Type {
+abstract class Type {
+    protected mixed $value;
+    protected array $texture;
+
+    protected function __construct(
+        mixed $value
+    )
+    {
+        $this->value = $value;
+        $this->determine_texture();
+    }
 
     public static function try_set(
         $value
@@ -30,37 +40,21 @@ class Type {
         return new Unknown($value);
     }
 
+    protected function determine_texture() : void {}
 }
 
 class Unknown extends Type implements IType {
-    public mixed $value;
-    protected function __construct(
-        $value
-    )
-    {
-        $this->value = $value;
-    }
 
-    public static function set(
+    public static function matches_type(
         $value
-    ) : Itype
+    ) : bool
     {
-        return new Unknown($value);
+        return true;
     }
 }
 
 
 class _Null extends Type implements IType, IScalar, INullish {
-
-    # Can't declare null type in php
-    public $value;
-
-    public function __construct(
-        $value = NULL
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -73,14 +67,6 @@ class _Null extends Type implements IType, IScalar, INullish {
 
 class _Boolean extends Type implements IType, IScalar {
 
-    public bool $value;
-
-    public function __construct(
-        bool $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -92,14 +78,6 @@ class _Boolean extends Type implements IType, IScalar {
 
 class _Byte extends Type implements IType, IScalar {
 
-    public string $value;
-
-    public function __construct(
-        string $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -118,17 +96,8 @@ class _Byte extends Type implements IType, IScalar {
     }
 }
 
-
 class _Numeric extends Type implements IType, IScalar, INumeric {
 
-    public int|float $value;
-
-    public function __construct(
-        int|float $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -140,14 +109,6 @@ class _Numeric extends Type implements IType, IScalar, INumeric {
 
 class _Nan extends Type implements IType, IScalar, INullish {
 
-    public $value;
-
-    public function __construct(
-        $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -163,17 +124,6 @@ class _Nan extends Type implements IType, IScalar, INullish {
 
 class _String extends Type implements IType, IScalar, IString {
 
-    public string $value;
-
-    public array $texture;
-
-    protected function __construct(
-        string $value
-    )
-    {
-        $this->value = $value;
-        $this->determine_texture();
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -181,25 +131,15 @@ class _String extends Type implements IType, IScalar, IString {
         return is_string($value);
     }
 
-    private function determine_texture()
+    protected function determine_texture() : void
     {
         $this->texture["length"] = strlen($this->value);
     }
-
 }
 
 
 class _NA extends Type implements IType, IScalar, INullish {
 
-    # String because for now we'll use `NA` to represent it
-    public string $value;
-
-    public function __construct(
-        string $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -211,19 +151,8 @@ class _NA extends Type implements IType, IScalar, INullish {
 
 
 class _Date extends Type implements IType, IScalar, IString, IDate {
-
-    public array $texture;
-    public string|int $value;
-
     public static array $formats =['Y-m-d', 'Y-m-d H:i:s', 'm/d/Y', 'm/d/Y H:i:s', 'Y-m-d\TH:i:s','Y-m-d\TH:i:s\Z'];
 
-    public function __construct(
-        string|int $value
-    )
-    {
-        $this->value = $value;
-        $this->determine_texture();
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -254,7 +183,8 @@ class _Date extends Type implements IType, IScalar, IString, IDate {
         }
         return false;
     }
-    private function determine_texture() : void
+
+    protected function determine_texture() : void
     {
         $this->texture["format"] = self::check_format($this->value);
     }
@@ -262,14 +192,6 @@ class _Date extends Type implements IType, IScalar, IString, IDate {
 
 class _Location extends Type implements IType, IScalar, IString, IExtensionType {
 
-    public string $value;
-
-    public function __construct(
-        string $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -286,23 +208,13 @@ class _Location extends Type implements IType, IScalar, IString, IExtensionType 
 
 class _Array extends Type implements IType, IList {
 
-    public array $texture;
-    public array $value;
-
-    protected function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-        $this->determine_texture();
-    }
     public static function matches_type(
         $value
     ) : bool
     {
         return is_array($value);
     }
-    private function determine_texture() : void
+    protected function determine_texture() : void
     {
         $this->texture = [
             "length" => sizeof($this->value),
@@ -350,10 +262,7 @@ class _BooleanVector extends _Array implements IType, IList {
     {
         return _Vector::matches_type($value) && Inference::is_all($value, "_Boolean");
     }
-
 }
-
-
 
 class _StringVector extends _Array implements IType, IList {
 
@@ -507,16 +416,6 @@ class _DateSeriesSet extends _Array implements IType, IList {
 
 class _Frame extends Type implements IType, ITable {
 
-    public array $value;
-    public array $texture;
-
-    protected function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-        $this->determine_texture();
-    }
 
     public static function matches_type(
         $value
@@ -527,7 +426,7 @@ class _Frame extends Type implements IType, ITable {
         if(!Inference::all_same_length($value)) return false;
         return true;
     }
-    private function determine_texture() : void
+    protected function determine_texture() : void
     {
         $inference = new Inference();
         $column_details = [];
