@@ -18,9 +18,23 @@ interface IDataFrame {}
 interface IMatrix {}
 
 
-class Unknown implements IType {
+class Type {
+
+    public static function try_set(
+        $value
+    ) : self | Unknown
+    {
+        if(static::matches_type($value)) {
+            return new static($value);
+        }
+        return new Unknown($value);
+    }
+
+}
+
+class Unknown extends Type implements IType {
     public mixed $value;
-    public function __construct(
+    protected function __construct(
         $value
     )
     {
@@ -36,7 +50,7 @@ class Unknown implements IType {
 }
 
 
-class _Null implements IType, IScalar, INullish {
+class _Null extends Type implements IType, IScalar, INullish {
 
     # Can't declare null type in php
     public $value;
@@ -53,21 +67,11 @@ class _Null implements IType, IScalar, INullish {
     {
         return $value === null;
     }
-    public static function try_set(
-        $value
-    ) : _Null | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Null($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
 
-class _Boolean implements IType, IScalar {
+class _Boolean extends Type implements IType, IScalar {
 
     public bool $value;
 
@@ -83,19 +87,10 @@ class _Boolean implements IType, IScalar {
     {
         return is_bool($value);
     }
-    public static function try_set(
-        $value
-    ) : _Boolean | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Boolean($value);
-        }
-        return new Unknown($value);
-    }
+
 }
 
-class _Byte implements IType, IScalar {
+class _Byte extends Type implements IType, IScalar {
 
     public string $value;
 
@@ -121,20 +116,10 @@ class _Byte implements IType, IScalar {
         }
         return false;
     }
-    public static function try_set(
-        $value
-    ) : _Byte | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Byte($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
-class _Numeric implements IType, IScalar, INumeric {
+class _Numeric extends Type implements IType, IScalar, INumeric {
 
     public int|float $value;
 
@@ -150,20 +135,10 @@ class _Numeric implements IType, IScalar, INumeric {
     {
         return is_numeric($value);
     }
-    public static function try_set(
-        $value
-    ) : _Numeric | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Numeric($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
-class _Nan implements IType, IScalar, INullish {
+class _Nan extends Type implements IType, IScalar, INullish {
 
     public $value;
 
@@ -183,26 +158,16 @@ class _Nan implements IType, IScalar, INullish {
             return false;
         }
     }
-    public static function try_set(
-        $value
-    ) : _Nan | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Nan($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
-class _String implements IType, IScalar, IString {
+class _String extends Type implements IType, IScalar, IString {
 
     public string $value;
 
     public array $texture;
 
-    private function __construct(
+    protected function __construct(
         string $value
     )
     {
@@ -215,17 +180,6 @@ class _String implements IType, IScalar, IString {
     {
         return is_string($value);
     }
-    public static function try_set(
-        $value
-    ) : IType
-    {
-        if(self::matches_type($value))
-        {
-            return new _String($value);
-        }
-
-        return new Unknown($value);
-    }
 
     private function determine_texture()
     {
@@ -235,7 +189,7 @@ class _String implements IType, IScalar, IString {
 }
 
 
-class _NA implements IType, IScalar, INullish {
+class _NA extends Type implements IType, IScalar, INullish {
 
     # String because for now we'll use `NA` to represent it
     public string $value;
@@ -253,21 +207,10 @@ class _NA implements IType, IScalar, INullish {
         if(!is_string($value)) return false;
         return strtoupper($value) === 'NA';
     }
-    public static function try_set(
-        $value
-    ) : _NA | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            $value = strtoupper($value);
-            return new _NA($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
-class _Date implements IType, IScalar, IString, IDate {
+class _Date extends Type implements IType, IScalar, IString, IDate {
 
     public array $texture;
     public string|int $value;
@@ -311,26 +254,13 @@ class _Date implements IType, IScalar, IString, IDate {
         }
         return false;
     }
-
-
-    public static function try_set(
-        $value
-    ) : _Date | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Date($value);
-        }
-        return new Unknown($value);
-    }
-
     private function determine_texture() : void
     {
         $this->texture["format"] = self::check_format($this->value);
     }
 }
 
-class _Location implements IType, IScalar, IString, IExtensionType {
+class _Location extends Type implements IType, IScalar, IString, IExtensionType {
 
     public string $value;
 
@@ -352,21 +282,9 @@ class _Location implements IType, IScalar, IString, IExtensionType {
         $knownLocations = ['United States of America', 'USA', 'us', 'USA', 'FR', 'CA', 'US', 'CA', 'FR', 'FR','USA', 'FR', 'CA', "US", "CA", "FR", "GB", "IT"];
         return in_array($value, $knownLocations, true);
     }
-
-
-    public static function try_set(
-        $value
-    ) : self | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Location($value);
-        }
-        return new Unknown($value);
-    }
 }
 
-class _Array implements IType, IList {
+class _Array extends Type implements IType, IList {
 
     public array $texture;
     public array $value;
@@ -384,23 +302,12 @@ class _Array implements IType, IList {
     {
         return is_array($value);
     }
-    public static function try_set(
-        $value
-    ) : _Array | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Array($value);
-        }
-        return new Unknown($value);
-    }
     private function determine_texture() : void
     {
         $this->texture = [
             "length" => sizeof($this->value),
         ];
     }
-
 }
 
 class _Vector extends _Array implements IType, IList {
@@ -421,16 +328,6 @@ class _Vector extends _Array implements IType, IList {
         }
         return true;
     }
-    public static function try_set(
-        $value
-    ) : _Vector | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Vector($value);
-        }
-        return new Unknown($value);
-    }
 
 }
 
@@ -443,16 +340,6 @@ class _NumericVector extends _Array implements IType, IList {
         return _Vector::matches_type($value) && Inference::is_all($value, "_Numeric");
     }
 
-    public static function try_set(
-        $value
-    ) : _NumericVector | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _NumericVector($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 class _BooleanVector extends _Array implements IType, IList {
@@ -464,16 +351,6 @@ class _BooleanVector extends _Array implements IType, IList {
         return _Vector::matches_type($value) && Inference::is_all($value, "_Boolean");
     }
 
-    public static function try_set(
-        $value
-    ) : _BooleanVector | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _BooleanVector($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
@@ -487,16 +364,6 @@ class _StringVector extends _Array implements IType, IList {
         return _Vector::matches_type($value) && Inference::is_all($value, "_String");
     }
 
-    public static function try_set(
-        $value
-    ) : _StringVector | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _StringVector($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 class _ByteVector extends _Array implements IType, IList {
@@ -508,16 +375,6 @@ class _ByteVector extends _Array implements IType, IList {
         return _Vector::matches_type($value) && Inference::is_all($value, "_Byte");
     }
 
-    public static function try_set(
-        $value
-    ) : _ByteVector | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _ByteVector($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
@@ -530,16 +387,6 @@ class _DateVector extends _Array implements IType, IList {
         return _Vector::matches_type($value) && Inference::is_all($value, "_Date");
     }
 
-    public static function try_set(
-        $value
-    ) : _DateVector | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _DateVector($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
@@ -552,16 +399,6 @@ class _LocationVector extends _Array implements IType, IList {
         return _Vector::matches_type($value) && Inference::is_all($value, "_Location");
     }
 
-    public static function try_set(
-        $value
-    ) : _LocationVector | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _LocationVector($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
@@ -584,17 +421,6 @@ class _Series extends _Array implements IType, IList {
 
         return Inference::is_ordered($value);
     }
-
-    public static function try_set(
-        $value
-    ) : _Series | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Series($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 class _DateSeries extends _Array implements IType, IList {
@@ -606,16 +432,6 @@ class _DateSeries extends _Array implements IType, IList {
         return _Series::matches_type($value) && Inference::is_all($value, "_Date");
     }
 
-    public static function try_set(
-        $value
-    ) : _DateSeries | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _DateSeries($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
@@ -632,16 +448,6 @@ class _Set extends _Array implements IType, IList {
         return count($value) === $unique_count;
     }
 
-    public static function try_set(
-        $value
-    ) : _Set | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Set($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 class _SeriesSet extends _Array implements IType, IList {
@@ -653,16 +459,6 @@ class _SeriesSet extends _Array implements IType, IList {
         return _Series::matches_type($value) && _Set::matches_type($value);
     }
 
-    public static function try_set(
-        $value
-    ) : _SeriesSet | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _SeriesSet($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
@@ -675,17 +471,6 @@ class _CategorySet extends _Array implements IType, IList {
     {
         return _Set::matches_type($value) && (Inference::is_all($value, '_String') || Inference::is_all($value, "_Date"));
     }
-
-    public static function try_set(
-        $value
-    ) : _CategorySet | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _CategorySet($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
@@ -697,17 +482,6 @@ class _LocationSet extends _Array implements IType, IList {
     {
         return _Set::matches_type($value) && Inference::is_all($value, "_Location");
     }
-
-    public static function try_set(
-        $value
-    ) : _LocationSet | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _LocationSet($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 class _DateSet extends _Array implements IType, IList {
@@ -717,17 +491,6 @@ class _DateSet extends _Array implements IType, IList {
     ) : bool
     {
         return _Set::matches_type($value) && Inference::is_all($value, "_Date");
-    }
-
-    public static function try_set(
-        $value
-    ) : _DateSet | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _DateSet($value);
-        }
-        return new Unknown($value);
     }
 }
 
@@ -739,21 +502,10 @@ class _DateSeriesSet extends _Array implements IType, IList {
     {
         return _DateSet::matches_type($value) && _DateSeries::matches_type($value);
     }
-
-    public static function try_set(
-        $value
-    ) : _DateSeriesSet | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _DateSeriesSet($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
-class _Frame implements IType, ITable {
+class _Frame extends Type implements IType, ITable {
 
     public array $value;
     public array $texture;
@@ -765,6 +517,7 @@ class _Frame implements IType, ITable {
         $this->value = $value;
         $this->determine_texture();
     }
+
     public static function matches_type(
         $value
     ) : bool
@@ -773,17 +526,6 @@ class _Frame implements IType, ITable {
         if(Inference::is_1D($value)) return false;
         if(!Inference::all_same_length($value)) return false;
         return true;
-    }
-
-    public static function try_set(
-        $value
-    ) : _Frame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Frame($value);
-        }
-        return new Unknown($value);
     }
     private function determine_texture() : void
     {
@@ -822,17 +564,6 @@ class _DataFrame extends _Frame implements IType, ITable, IDataFrame {
         }
         return true;
     }
-
-    public static function try_set(
-        $value
-    ) : _DataFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _DataFrame($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 class _Matrix extends _Frame implements IType, ITable, IMatrix {
@@ -851,17 +582,6 @@ class _Matrix extends _Frame implements IType, ITable, IMatrix {
         }
         if(sizeof($types) > 1) return false;
         return true;
-    }
-
-    public static function try_set(
-        $value
-    ) : _Matrix | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Matrix($value);
-        }
-        return new Unknown($value);
     }
 }
 
@@ -883,17 +603,6 @@ class _2xN_NumericMatrix extends _Frame implements IType, ITable, IMatrix {
         }
         return true;
     }
-
-    public static function try_set(
-        $value
-    ) : _2xN_NumericMatrix | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _2xN_NumericMatrix($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 class _Nx2_NumericMatrix extends _Frame implements IType, ITable, IMatrix {
@@ -913,17 +622,6 @@ class _Nx2_NumericMatrix extends _Frame implements IType, ITable, IMatrix {
 
         return true;
     }
-
-    public static function try_set(
-        $value
-    ) : _Nx2_NumericMatrix | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Nx2_NumericMatrix($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 class _Nx2_CategoryNumericDictionaryFrame extends _Frame implements IType, ITable, IMatrix {
@@ -938,17 +636,6 @@ class _Nx2_CategoryNumericDictionaryFrame extends _Frame implements IType, ITabl
             return true;
         }
         return false;
-    }
-
-    public static function try_set(
-        $value
-    ) : _Nx2_CategoryNumericDictionaryFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Nx2_CategoryNumericDictionaryFrame($value);
-        }
-        return new Unknown($value);
     }
 }
 
@@ -965,17 +652,6 @@ class _Nx2_LocationCategoryNumericDictionaryFrame extends _Frame implements ITyp
             return true;
         }
         return false;
-    }
-
-    public static function try_set(
-        $value
-    ) : _Nx2_LocationCategoryNumericDictionaryFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _Nx2_LocationCategoryNumericDictionaryFrame($value);
-        }
-        return new Unknown($value);
     }
 }
 
@@ -1001,17 +677,6 @@ class _DictionaryFrame extends _Frame implements IType, ITable {
         if($sets === 0) return false;
 
         return true;
-    }
-
-    public static function try_set(
-        $value
-    ) : _DictionaryFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _DictionaryFrame($value);
-        }
-        return new Unknown($value);
     }
 }
 
@@ -1039,17 +704,6 @@ class _StringVectorNumericVectorFrame extends _Frame implements IType, ITable {
 
         return true;
     }
-
-    public static function try_set(
-        $value
-    ) : _StringVectorNumericVectorFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _StringVectorNumericVectorFrame($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
@@ -1075,17 +729,6 @@ class _CategorySetNumericVectorFrame extends _Frame implements IType, ITable {
 
         return true;
     }
-
-    public static function try_set(
-        $value
-    ) : _CategorySetNumericVectorFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _CategorySetNumericVectorFrame($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
@@ -1101,17 +744,6 @@ class _CategorySetNumericVectorFrame_Transposed extends _Frame implements IType,
         }
         return false;
     }
-
-    public static function try_set(
-        $value
-    ) : _CategorySetNumericVectorFrame_Transposed | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _CategorySetNumericVectorFrame_Transposed($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 class _DateSeriesSetNumericVectorFrame_Transposed extends _Frame implements IType, ITable {
@@ -1125,17 +757,6 @@ class _DateSeriesSetNumericVectorFrame_Transposed extends _Frame implements ITyp
             return true;
         }
         return false;
-    }
-
-    public static function try_set(
-        $value
-    ) : _DateSeriesSetNumericVectorFrame_Transposed | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _DateSeriesSetNumericVectorFrame_Transposed($value);
-        }
-        return new Unknown($value);
     }
 }
 
@@ -1158,17 +779,6 @@ class _2xN_CategoryNumericDictionaryFrame extends _Frame implements IType, ITabl
         if($has_numeric !== 1) return false;
 
         return true;
-    }
-
-    public static function try_set(
-        $value
-    ) : _2xN_CategoryNumericDictionaryFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _2xN_CategoryNumericDictionaryFrame($value);
-        }
-        return new Unknown($value);
     }
 }
 
@@ -1193,17 +803,6 @@ class _2xN_LocationCategoryNumericDictionaryFrame extends _Frame implements ITyp
 
         return true;
     }
-
-    public static function try_set(
-        $value
-    ) : _2xN_LocationCategoryNumericDictionaryFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _2xN_LocationCategoryNumericDictionaryFrame($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
@@ -1227,17 +826,6 @@ class _DateVectorNumericVectorFrame extends _Frame implements IType, ITable {
 
         return true;
     }
-
-    public static function try_set(
-        $value
-    ) : _DateVectorNumericVectorFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _DateVectorNumericVectorFrame($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 class _DateSetNumericVectorFrame extends _Frame implements IType, ITable {
@@ -1259,17 +847,6 @@ class _DateSetNumericVectorFrame extends _Frame implements IType, ITable {
         if($has_numeric < 1) return false;
 
         return true;
-    }
-
-    public static function try_set(
-        $value
-    ) : _DateSetNumericVectorFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _DateSetNumericVectorFrame($value);
-        }
-        return new Unknown($value);
     }
 }
 
@@ -1295,17 +872,6 @@ class _DateSeriesNumericVectorFrame extends _Frame implements IType, ITable {
 
         return true;
     }
-
-    public static function try_set(
-        $value
-    ) : _DateSeriesNumericVectorFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _DateSeriesNumericVectorFrame($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 class _DateSeriesSetNumericVectorFrame extends _Frame implements IType, ITable {
@@ -1328,17 +894,6 @@ class _DateSeriesSetNumericVectorFrame extends _Frame implements IType, ITable {
         if($has_numeric < 1) return false;
 
         return true;
-    }
-
-    public static function try_set(
-        $value
-    ) : _DateSeriesSetNumericVectorFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _DateSeriesSetNumericVectorFrame($value);
-        }
-        return new Unknown($value);
     }
 }
 
@@ -1364,17 +919,6 @@ class _CategorySetDateRangeFrame extends _Frame implements IType, ITable {
         if($has_date_vector !== 2) return false;
         return true;
     }
-
-    public static function try_set(
-        $value
-    ) : _CategorySetDateRangeFrame | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _CategorySetDateRangeFrame($value);
-        }
-        return new Unknown($value);
-    }
 }
 
 
@@ -1389,16 +933,5 @@ class _CategorySetDateRangeFrame_Transposed extends _Frame implements IType, ITa
             return false;
         }
         return true;
-    }
-
-    public static function try_set(
-        $value
-    ) : _CategorySetDateRangeFrame_Transposed | Unknown
-    {
-        if(self::matches_type($value))
-        {
-            return new _CategorySetDateRangeFrame_Transposed($value);
-        }
-        return new Unknown($value);
     }
 }
