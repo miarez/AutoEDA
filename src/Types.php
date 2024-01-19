@@ -200,11 +200,14 @@ class _String implements IType, IScalar, IString {
 
     public string $value;
 
-    public function __construct(
+    public array $texture;
+
+    private function __construct(
         string $value
     )
     {
         $this->value = $value;
+        $this->determine_texture();
     }
     public static function matches_type(
         $value
@@ -223,6 +226,12 @@ class _String implements IType, IScalar, IString {
 
         return new Unknown($value);
     }
+
+    private function determine_texture()
+    {
+        $this->texture["length"] = strlen($this->value);
+    }
+
 }
 
 
@@ -260,27 +269,35 @@ class _NA implements IType, IScalar, INullish {
 
 class _Date implements IType, IScalar, IString, IDate {
 
+    public array $texture;
     public string|int $value;
+
+    public static array $formats =['Y-m-d', 'Y-m-d H:i:s', 'm/d/Y', 'm/d/Y H:i:s', 'Y-m-d\TH:i:s','Y-m-d\TH:i:s\Z'];
 
     public function __construct(
         string|int $value
     )
     {
         $this->value = $value;
+        $this->determine_texture();
     }
     public static function matches_type(
         $value
     ) : bool
     {
-        // Define an array of expected date formats
-        $dateFormats = ['Y-m-d', 'Y-m-d H:i:s', 'm/d/Y', 'm/d/Y H:i:s', 'Y-m-d\TH:i:s','Y-m-d\TH:i:s\Z'];
+        if(!self::check_format($value)) return false;
+        return true;
+    }
 
-        // Check for string format dates
+    private static function check_format(
+        $value
+    ) : string|false
+    {
         if (is_string($value)) {
-            foreach ($dateFormats as $format) {
+            foreach (self::$formats as $format) {
                 $date = DateTime::createFromFormat($format, $value);
                 if ($date && $date->format($format) == $value) {
-                    return true;
+                    return $format;
                 }
             }
         }
@@ -289,11 +306,13 @@ class _Date implements IType, IScalar, IString, IDate {
         if (is_numeric($value)) {
             $inputStr = (string)$value;
             if (strlen($inputStr) === 10 && strtotime('@'.$value) !== false) {
-                return true;
+                return "epoch";
             }
         }
         return false;
     }
+
+
     public static function try_set(
         $value
     ) : _Date | Unknown
@@ -303,6 +322,11 @@ class _Date implements IType, IScalar, IString, IDate {
             return new _Date($value);
         }
         return new Unknown($value);
+    }
+
+    private function determine_texture() : void
+    {
+        $this->texture["format"] = self::check_format($this->value);
     }
 }
 
@@ -344,13 +368,15 @@ class _Location implements IType, IScalar, IString, IExtensionType {
 
 class _Array implements IType, IList {
 
+    public array $texture;
     public array $value;
 
-    public function __construct(
+    protected function __construct(
         array $value
     )
     {
         $this->value = $value;
+        $this->determine_texture();
     }
     public static function matches_type(
         $value
@@ -368,18 +394,17 @@ class _Array implements IType, IList {
         }
         return new Unknown($value);
     }
+    private function determine_texture() : void
+    {
+        $this->texture = [
+            "length" => sizeof($this->value),
+        ];
+    }
+
 }
 
-class _Vector implements IType, IList {
+class _Vector extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -406,18 +431,11 @@ class _Vector implements IType, IList {
         }
         return new Unknown($value);
     }
+
 }
 
-class _NumericVector implements IType, IList {
+class _NumericVector extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -437,16 +455,8 @@ class _NumericVector implements IType, IList {
     }
 }
 
-class _BooleanVector implements IType, IList {
+class _BooleanVector extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -468,16 +478,8 @@ class _BooleanVector implements IType, IList {
 
 
 
-class _StringVector implements IType, IList {
+class _StringVector extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -497,17 +499,8 @@ class _StringVector implements IType, IList {
     }
 }
 
+class _ByteVector extends _Array implements IType, IList {
 
-class _ByteVector implements IType, IList {
-
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -528,16 +521,8 @@ class _ByteVector implements IType, IList {
 }
 
 
-class _DateVector implements IType, IList {
+class _DateVector extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -558,16 +543,8 @@ class _DateVector implements IType, IList {
 }
 
 
-class _LocationVector implements IType, IList {
+class _LocationVector extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -589,16 +566,8 @@ class _LocationVector implements IType, IList {
 
 
 
-class _Series implements IType, IList {
+class _Series extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -628,16 +597,8 @@ class _Series implements IType, IList {
     }
 }
 
-class _DateSeries implements IType, IList {
+class _DateSeries extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -658,16 +619,8 @@ class _DateSeries implements IType, IList {
 }
 
 
-class _Set implements IType, IList {
+class _Set extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -691,16 +644,8 @@ class _Set implements IType, IList {
     }
 }
 
-class _SeriesSet implements IType, IList {
+class _SeriesSet extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -722,16 +667,8 @@ class _SeriesSet implements IType, IList {
 
 
 # Technically StringSet
-class _CategorySet implements IType, IList {
+class _CategorySet extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -752,16 +689,8 @@ class _CategorySet implements IType, IList {
 }
 
 
-class _LocationSet implements IType, IList {
+class _LocationSet extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -781,16 +710,8 @@ class _LocationSet implements IType, IList {
     }
 }
 
-class _DateSet implements IType, IList {
+class _DateSet extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -810,16 +731,8 @@ class _DateSet implements IType, IList {
     }
 }
 
-class _DateSeriesSet implements IType, IList {
+class _DateSeriesSet extends _Array implements IType, IList {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -843,12 +756,14 @@ class _DateSeriesSet implements IType, IList {
 class _Frame implements IType, ITable {
 
     public array $value;
+    public array $texture;
 
-    public function __construct(
+    protected function __construct(
         array $value
     )
     {
         $this->value = $value;
+        $this->determine_texture();
     }
     public static function matches_type(
         $value
@@ -870,19 +785,30 @@ class _Frame implements IType, ITable {
         }
         return new Unknown($value);
     }
+    private function determine_texture() : void
+    {
+        $inference = new Inference();
+        $column_details = [];
+        foreach($this->value as $column)
+        {
+            $type       = $inference->get_best_match($column);
+            $row_count  = $type->texture['length'];
+            $column_details[] = [
+                "type"      => get_class($type),
+                "texture"   => $type->texture,
+            ];
+        }
+        $this->texture = [
+            "columns"       => sizeof($this->value),
+            "rows"          => $row_count,
+            "column_details" => $column_details,
+        ];
+    }
 }
 
 
-class _DataFrame implements IType, ITable, IDataFrame {
+class _DataFrame extends _Frame implements IType, ITable, IDataFrame {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -909,16 +835,8 @@ class _DataFrame implements IType, ITable, IDataFrame {
     }
 }
 
-class _Matrix implements IType, ITable, IMatrix {
+class _Matrix extends _Frame implements IType, ITable, IMatrix {
 
-    public array $value;
-
-    private function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -948,16 +866,8 @@ class _Matrix implements IType, ITable, IMatrix {
 }
 
 
-class _2xN_NumericMatrix implements IType, ITable, IMatrix {
+class _2xN_NumericMatrix extends _Frame implements IType, ITable, IMatrix {
 
-    public array $value;
-
-    private function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -986,16 +896,8 @@ class _2xN_NumericMatrix implements IType, ITable, IMatrix {
     }
 }
 
-class _Nx2_NumericMatrix implements IType, ITable, IMatrix {
+class _Nx2_NumericMatrix extends _Frame implements IType, ITable, IMatrix {
 
-    public array $value;
-
-    private function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1024,16 +926,8 @@ class _Nx2_NumericMatrix implements IType, ITable, IMatrix {
     }
 }
 
-class _Nx2_CategoryNumericDictionaryFrame implements IType, ITable, IMatrix {
+class _Nx2_CategoryNumericDictionaryFrame extends _Frame implements IType, ITable, IMatrix {
 
-    public array $value;
-
-    private function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1058,16 +952,9 @@ class _Nx2_CategoryNumericDictionaryFrame implements IType, ITable, IMatrix {
     }
 }
 
-class _Nx2_LocationCategoryNumericDictionaryFrame implements IType, ITable, IMatrix {
+class _Nx2_LocationCategoryNumericDictionaryFrame extends _Frame implements IType, ITable, IMatrix {
 
-    public array $value;
 
-    private function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1093,16 +980,8 @@ class _Nx2_LocationCategoryNumericDictionaryFrame implements IType, ITable, IMat
 }
 
 
-class _DictionaryFrame implements IType, ITable {
+class _DictionaryFrame extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1138,16 +1017,8 @@ class _DictionaryFrame implements IType, ITable {
 
 
 
-class _StringVectorNumericVectorFrame implements IType, ITable {
+class _StringVectorNumericVectorFrame extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1182,16 +1053,8 @@ class _StringVectorNumericVectorFrame implements IType, ITable {
 }
 
 
-class _CategorySetNumericVectorFrame implements IType, ITable {
+class _CategorySetNumericVectorFrame extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1226,16 +1089,8 @@ class _CategorySetNumericVectorFrame implements IType, ITable {
 }
 
 
-class _CategorySetNumericVectorFrame_Transposed implements IType, ITable {
+class _CategorySetNumericVectorFrame_Transposed extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1259,16 +1114,8 @@ class _CategorySetNumericVectorFrame_Transposed implements IType, ITable {
     }
 }
 
-class _DateSeriesSetNumericVectorFrame_Transposed implements IType, ITable {
+class _DateSeriesSetNumericVectorFrame_Transposed extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1292,16 +1139,8 @@ class _DateSeriesSetNumericVectorFrame_Transposed implements IType, ITable {
     }
 }
 
-class _2xN_CategoryNumericDictionaryFrame implements IType, ITable {
+class _2xN_CategoryNumericDictionaryFrame extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1334,16 +1173,8 @@ class _2xN_CategoryNumericDictionaryFrame implements IType, ITable {
 }
 
 
-class _2xN_LocationCategoryNumericDictionaryFrame implements IType, ITable {
+class _2xN_LocationCategoryNumericDictionaryFrame extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1376,16 +1207,8 @@ class _2xN_LocationCategoryNumericDictionaryFrame implements IType, ITable {
 }
 
 
-class _DateVectorNumericVectorFrame implements IType, ITable {
+class _DateVectorNumericVectorFrame extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1417,16 +1240,8 @@ class _DateVectorNumericVectorFrame implements IType, ITable {
     }
 }
 
-class _DateSetNumericVectorFrame implements IType, ITable {
+class _DateSetNumericVectorFrame extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1460,16 +1275,8 @@ class _DateSetNumericVectorFrame implements IType, ITable {
 
 
 
-class _DateSeriesNumericVectorFrame implements IType, ITable {
+class _DateSeriesNumericVectorFrame extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1501,16 +1308,8 @@ class _DateSeriesNumericVectorFrame implements IType, ITable {
     }
 }
 
-class _DateSeriesSetNumericVectorFrame implements IType, ITable {
+class _DateSeriesSetNumericVectorFrame extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1544,16 +1343,8 @@ class _DateSeriesSetNumericVectorFrame implements IType, ITable {
 }
 
 
-class _CategorySetDateRangeFrame implements IType, ITable {
+class _CategorySetDateRangeFrame extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool
@@ -1587,16 +1378,8 @@ class _CategorySetDateRangeFrame implements IType, ITable {
 }
 
 
-class _CategorySetDateRangeFrame_Transposed implements IType, ITable {
+class _CategorySetDateRangeFrame_Transposed extends _Frame implements IType, ITable {
 
-    public array $value;
-
-    public function __construct(
-        array $value
-    )
-    {
-        $this->value = $value;
-    }
     public static function matches_type(
         $value
     ) : bool

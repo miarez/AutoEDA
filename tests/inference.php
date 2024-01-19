@@ -1,7 +1,7 @@
 <?php
 require_once "../utils.php";
 require_once "../src/Inference.php";
-
+require_once "../src/Transformations.php";
 
 $tests = [
     // Scalar Types
