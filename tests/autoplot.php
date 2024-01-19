@@ -15,8 +15,17 @@ $data = [["pizza", "hotdogs", "burgers", "ice cream", "chips"], [7, 8, 9, 13, 5]
 $data = [["US", "CA", "FR", "GB", "IT"], [7, 8, 9, 13, 5]];
 
 
-$data = [["pizza", "hotdogs", "burgers", "ice cream", "chips"], [7, 8, 9, 13, 5], [100, 200, 300, 240, 150]];
+//$data = [["pizza", "hotdogs", "burgers", "ice cream", "chips"], [7, 8, 9, 13, 5], [100, 200, 300, 240, 150]];
+//$data = [["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"], [7, 8, 9, 13, 5, 100, 200, 300, 240, 150]];
+
+$data = [["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"], [7, 8, 9, 13, 5], [100, 200, 300, 240, 150]];
+
+
 $type = (new Inference())->get_best_match($data);
+
+//pp($type, 1);
+
+
 
 $json = ($autoPlot)->try_plot($type);
 ?>
@@ -48,6 +57,9 @@ $json = ($autoPlot)->try_plot($type);
                 case "Google_BarChart":
                     renderBar(JSON.parse(_data.data))
                     break;
+                case "Google_LineChart":
+                    renderLine(JSON.parse(_data.data))
+                    break;
                 default:
                     cs("No Known Plot Can Be Rendered")
                     break;
@@ -56,6 +68,7 @@ $json = ($autoPlot)->try_plot($type);
 
         function renderScatter (_data) {
             let data = new google.visualization.DataTable();
+
             for(let i = 0; i < _data[0].length; i++)
             {
                 data.addColumn('number', `series${i}`);
@@ -134,6 +147,32 @@ $json = ($autoPlot)->try_plot($type);
             let chart = new google.charts.Bar(document.getElementById('chart_div'));
             chart.draw(data, google.charts.Bar.convertOptions(options));
         }
+
+
+        function renderLine(
+            _data
+        ) {
+            let data = new google.visualization.DataTable()
+
+            data.addColumn("string", "Date")
+            for(let i = 1; i < _data[0].length; i++)
+            {
+                data.addColumn('number', `series${i}`);
+            }
+
+            data.addRows(_data);
+
+            let options = {
+                title: 'Line Chart',
+                curveType: 'function',
+                legend: { position: 'bottom' }
+            };
+            let chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+        }
+
+
+
 
     </script>
 

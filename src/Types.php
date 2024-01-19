@@ -1259,6 +1259,39 @@ class _CategorySetNumericVectorFrame_Transposed implements IType, ITable {
     }
 }
 
+class _DateSeriesSetNumericVectorFrame_Transposed implements IType, ITable {
+
+    public array $value;
+
+    public function __construct(
+        array $value
+    )
+    {
+        $this->value = $value;
+    }
+    public static function matches_type(
+        $value
+    ) : bool
+    {
+        if(!_Frame::matches_type($value)) return false;
+        if(_DateSeriesSetNumericVectorFrame::matches_type(Transformations::transpose($value))) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function try_set(
+        $value
+    ) : _DateSeriesSetNumericVectorFrame_Transposed | Unknown
+    {
+        if(self::matches_type($value))
+        {
+            return new _DateSeriesSetNumericVectorFrame_Transposed($value);
+        }
+        return new Unknown($value);
+    }
+}
+
 class _2xN_CategoryNumericDictionaryFrame implements IType, ITable {
 
     public array $value;

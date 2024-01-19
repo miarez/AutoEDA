@@ -39,6 +39,14 @@ class Google_BarChart implements Plot,Bar {
         $this->data = json_encode($data->value);
     }
 }
+class Google_LineChart implements Plot,Bar {
+    public string|false $data;
+    public function __construct(
+        _DateSeriesSetNumericVectorFrame_Transposed $data
+    ){
+        $this->data = json_encode($data->value);
+    }
+}
 
 
 
