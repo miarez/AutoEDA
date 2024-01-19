@@ -19,6 +19,9 @@ class Transformations {
         "_DateSeriesSetNumericVectorFrame" => [
             "_DateSeriesSetNumericVectorFrame_Transposed" => "transpose",
         ],
+        "_CategorySetDateRangeFrame" => [
+            "_CategorySetDateRangeFrame_Transposed" => "transpose",
+        ],
     ];
 
     public static function pairwiseZip(array $array1, array $array2): array {

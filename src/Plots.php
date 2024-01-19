@@ -48,6 +48,15 @@ class Google_LineChart implements Plot,Bar {
     }
 }
 
+class Google_TimeLine implements Plot,Bar {
+    public string|false $data;
+    public function __construct(
+        _CategorySetDateRangeFrame_Transposed $data
+    ){
+        $this->data = json_encode($data->value);
+    }
+}
+
 
 
 

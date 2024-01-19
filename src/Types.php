@@ -385,6 +385,7 @@ class _Vector implements IType, IList {
     ) : bool
     {
         if (!_Array::matches_type($value)) return false;
+        if(empty($value)) return false;
 
         $element_type = get_class((new Inference)->get_best_match($value[0]));
         foreach ($value as $item){
@@ -1107,7 +1108,7 @@ class _DictionaryFrame implements IType, ITable {
     ) : bool
     {
         if(!_DataFrame::matches_type($value)) return false;
-
+        if(sizeof($value) !== 2) return false;
         $hold = [];
         $sets = 0;
         foreach($value as $columns)
@@ -1118,7 +1119,6 @@ class _DictionaryFrame implements IType, ITable {
         }
 
         if(sizeof($hold) !== 2) return false;
-
         if($sets === 0) return false;
 
         return true;
@@ -1538,6 +1538,83 @@ class _DateSeriesSetNumericVectorFrame implements IType, ITable {
         if(self::matches_type($value))
         {
             return new _DateSeriesSetNumericVectorFrame($value);
+        }
+        return new Unknown($value);
+    }
+}
+
+
+class _CategorySetDateRangeFrame implements IType, ITable {
+
+    public array $value;
+
+    public function __construct(
+        array $value
+    )
+    {
+        $this->value = $value;
+    }
+    public static function matches_type(
+        $value
+    ) : bool
+    {
+        if(!_DataFrame::matches_type($value)) return false;
+        if(sizeof($value) !== 3) return false;
+
+        $inference = new Inference();
+
+        $has_category_set = $has_date_vector = 0;
+        foreach($value as $columns)
+        {
+            $has_category_set += get_class($inference->get_best_match($columns)) == "_CategorySet";
+            $has_date_vector += _DateVector::matches_type($columns);
+        }
+        if($has_category_set !== 1) return false;
+        if($has_date_vector !== 2) return false;
+        return true;
+    }
+
+    public static function try_set(
+        $value
+    ) : _CategorySetDateRangeFrame | Unknown
+    {
+        if(self::matches_type($value))
+        {
+            return new _CategorySetDateRangeFrame($value);
+        }
+        return new Unknown($value);
+    }
+}
+
+
+class _CategorySetDateRangeFrame_Transposed implements IType, ITable {
+
+    public array $value;
+
+    public function __construct(
+        array $value
+    )
+    {
+        $this->value = $value;
+    }
+    public static function matches_type(
+        $value
+    ) : bool
+    {
+        if(!_DataFrame::matches_type($value)) return false;
+        if(!_CategorySetDateRangeFrame::matches_type(Transformations::transpose($value))){
+            return false;
+        }
+        return true;
+    }
+
+    public static function try_set(
+        $value
+    ) : _CategorySetDateRangeFrame_Transposed | Unknown
+    {
+        if(self::matches_type($value))
+        {
+            return new _CategorySetDateRangeFrame_Transposed($value);
         }
         return new Unknown($value);
     }

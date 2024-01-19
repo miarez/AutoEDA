@@ -20,6 +20,10 @@ $data = [["US", "CA", "FR", "GB", "IT"], [7, 8, 9, 13, 5]];
 
 $data = [["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"], [7, 8, 9, 13, 5], [100, 200, 300, 240, 150]];
 
+$data = [[],[],[]]; # == Series .. not sure if this is good?
+
+$data = [["project1", "project2", "project3"],["2023-01-01", "2023-02-01", "2023-04-01"],["2023-02-01", "2023-04-01", "2023-06-01"]];
+
 
 $type = (new Inference())->get_best_match($data);
 
@@ -36,7 +40,7 @@ $json = ($autoPlot)->try_plot($type);
     <title>AutoPlot</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart', 'scatter', 'geochart', 'bar']});
+        google.charts.load('current', {'packages':['corechart', 'scatter', 'geochart', 'bar', 'timeline']});
 
         const cs = console.log;
 
@@ -59,6 +63,9 @@ $json = ($autoPlot)->try_plot($type);
                     break;
                 case "Google_LineChart":
                     renderLine(JSON.parse(_data.data))
+                    break;
+                case "Google_TimeLine":
+                    renderTimeLine(JSON.parse(_data.data))
                     break;
                 default:
                     cs("No Known Plot Can Be Rendered")
@@ -171,7 +178,26 @@ $json = ($autoPlot)->try_plot($type);
             chart.draw(data, options);
         }
 
+        function renderTimeLine(
+            _data
+        )
+        {
+            let container = document.getElementById('chart_div');
+            let chart = new google.visualization.Timeline(container);
+            let dataTable = new google.visualization.DataTable();
 
+            // Makes Dates Out of My Strings
+            for(let row = 0; row < _data.length; row++){
+                for(let col = 1; col < _data[row].length; col++){
+                    _data[row][col] = new Date(_data[row][col]);
+                }
+            }
+            dataTable.addColumn({ type: 'string', id: 'Category' });
+            dataTable.addColumn({ type: 'date', id: 'Start' });
+            dataTable.addColumn({ type: 'date', id: 'End' });
+            dataTable.addRows(_data);
+            chart.draw(dataTable);
+        }
 
 
     </script>
